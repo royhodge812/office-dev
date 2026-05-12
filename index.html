@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw System Command</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-color: #38bdf8;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-image: radial-gradient(circle at top left, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.025em;
+        }
+
+        .progress-container {
+            width: 300px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 15px var(--accent-color);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+
+        .col-4 { grid-column: span 4; }
+        .col-8 { grid-column: span 8; }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .stat-label { color: var(--text-secondary); font-size: 0.875rem; }
+        .stat-value { font-weight: 600; font-size: 0.875rem; color: var(--accent-color); }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .checklist-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .checklist-item input {
+            margin-right: 12px;
+            accent-color: var(--accent-color);
+        }
+
+        .checklist-item label {
+            cursor: pointer;
+            font-size: 0.875rem;
+            flex-grow: 1;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .col-4, .col-8 { grid-column: span 12; }
+            header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .progress-container { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="glass-card">
+            <div>
+                <h1>OpenClaw System Command</h1>
+                <p style="color: var(--text-secondary); margin: 4px 0 0 0; font-size: 0.875rem;">DigitalOcean Droplet Fleet Management</p>
+            </div>
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">GLOBAL SYSTEM HEALTH</span>
+                    <span id="progress-percent" style="font-size: 0.75rem; color: var(--accent-color); font-weight: 700;">0%</span>
+                </div>
+                <div class="progress-container">
+                    <div id="main-progress" class="progress-bar"></div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- System Metrics -->
+            <div class="col-4">
+                <div class="glass-card">
+                    <h2 style="font-size: 1rem; margin-top: 0;">Operational Health</h2>
+                    <div class="stat-item">
+                        <span class="stat-label">Backup Status</span>
+                        <span class="stat-value">HEALTHY</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Code Drift</span>
+                        <span class="stat-value">0.02%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Uptime</span>
+                        <span class="stat-value">99.98%</span>
+                    </div>
+                    <div class="stat-item" style="border: none;">
+                        <span class="stat-label">Last Snapshot</span>
+                        <span class="stat-value">2h ago</span>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h2 style="font-size: 1rem; margin-top: 0;">Human Dev Checklist</h2>
+                    <ul class="checklist" id="human-tasks">
+                        <li class="checklist-item"><input type="checkbox"><label>Enable DO Backups</label></li>
+                        <li class="checklist-item"><input type="checkbox"><label>Configure Rclone</label></li>
+                        <li class="checklist-item"><input type="checkbox"><label>Verify Weekly Restore</label></li>
+                        <li class="checklist-item"><input type="checkbox"><label>Manual Snapshot taken</label></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Activity Chart -->
+            <div class="col-8">
+                <div class="glass-card">
+                    <h2 style="font-size: 1rem; margin-top: 0;">Deployment & Backup Activity</h2>
+                    <div style="height: 300px;">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h2 style="font-size: 1rem; margin-top: 0;">Agent Task Pipeline</h2>
+                    <ul class="checklist" id="agent-tasks">
+                        <li class="checklist-item"><input type="checkbox" checked disabled><label>Initialize Git Repo</label></li>
+                        <li class="checklist-item"><input type="checkbox"><label>Automated Commit/Push</label></li>
+                        <li class="checklist-item"><input type="checkbox"><label>Scheduled State Backup</label></li>
+                        <li class="checklist-item"><input type="checkbox"><label>Environment Heartbeat Check</label></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Progress Management
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const progressBar = document.getElementById('main-progress');
+        const progressPercent = document.getElementById('progress-percent');
+
+        function updateProgress() {
+            const total = checkboxes.length;
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const percentage = Math.round((checked / total) * 100);
+            progressBar.style.width = percentage + '%';
+            progressPercent.textContent = percentage + '%';
+            
+            checkboxes.forEach(cb => {
+                const label = cb.nextElementSibling;
+                if (cb.checked) {
+                    label.classList.add('completed');
+                } else {
+                    label.classList.remove('completed');
+                }
+            });
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateProgress));
+        updateProgress();
+
+        // Chart Initialization
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Commits',
+                    data: [12, 19, 15, 8, 22, 5, 2],
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Backups',
+                    data: [4, 4, 4, 4, 4, 4, 4],
+                    borderColor: '#94a3b8',
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#94a3b8', font: { family: 'Inter' } }
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
